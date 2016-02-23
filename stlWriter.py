@@ -1,5 +1,4 @@
 #python file to write .stl files
-import math
 import random as rng
 
 #gets number of sides. Will round down
