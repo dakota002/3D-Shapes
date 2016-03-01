@@ -11,3 +11,7 @@ When input is 4, creates a triangular pyramid.
 --2/25/16--
 Creates cones based on input.
 Added various vector functions.
+
+  --3/1/16--
+  Cones now have closed bases
+  
