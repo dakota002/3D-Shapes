@@ -102,7 +102,7 @@ def rotation(phi,u,vect):
     return new
 
 
-#makes a pyramid and writes to stl file
+#makes a closed cone and writes to stl file
 def mkCone(sides):
     m=mkVect()
     vecMat=[origin,m]
@@ -119,6 +119,14 @@ def mkCone(sides):
             file.write('\n  facet normal 0.000000e+00 0.000000e+00 -1.000000e+00 \n    outer loop \n')
             for j in range(len(pyrMat[i])):
                 file.write('      vertex '+str(pyrMat[i][j][0])+' '+str(pyrMat[i][j][1])+' '+str(pyrMat[i][j][2]))
+                file.write('\n')
+            file.write('    endloop\n  endfacet')
+        for i in range(len(pyrMat)-2):
+            file.write('\n  facet normal 0.000000e+00 0.000000e+00 -1.000000e+00 \n    outer loop \n')
+            file.write('      vertex '+str(vecMat[1][0])+' '+str(vecMat[1][1])+' '+str(vecMat[1][2]))
+            file.write('\n')
+            for j in range(1,3):
+                file.write('      vertex '+str(vecMat[i+j+1][0])+' '+str(vecMat[i+j+1][1])+' '+str(vecMat[i+j+1][2]))
                 file.write('\n')
             file.write('    endloop\n  endfacet')
         file.write('\nendsolid Default')
