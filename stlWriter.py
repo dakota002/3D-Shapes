@@ -3,7 +3,6 @@ from random import randint as rInt
 from random import random as rDec
 from math import cos,sin,acos,pi,sqrt
 
-
 #gets number of sides and shape
 while True:
     try:
@@ -14,11 +13,26 @@ while True:
 
 while True:
     try:
-        shape=str(input("Pyramid"))
+        shape=str(input("Shape: "))
         break
     except (ValueError,NameError,SyntaxError):
         print("Enter a valid shape")
     
+while True:
+    try:
+        mirror=str(input("Mirror object: "))
+        break
+    except(ValueError,NameError,SyntaxError):
+        print("Choose valid option")
+
+if mirror.lower()=='y':
+    while True:
+        try:
+            mAxis=str(input("Enter tuple containing 'x', 'y', or 'z': "))
+            break
+        except(ValueError,NameError,SyntaxError):
+            print("Choose valid axis")
+            
 #Reference points
 origin = [0,0,0]
 a=(1/sqrt(3))
@@ -131,5 +145,51 @@ def mkCone(sides):
             file.write('    endloop\n  endfacet')
         file.write('\nendsolid Default')
 
-if shape=='y':
+#reflects the shape about a plane
+def reflect(mAxis):
+    refList=[]
+    with open('object.stl','r') as file:
+        for line in file:
+            if ('vertex' in line)== True:
+                refList.append([float(line[13:line.find(' ',13)]),
+                               float(line[line.find(' ',13)+1:line.find(' ',line.find(' ',line.find(' ',13)+1))]),
+                               float(line[line.find(' ',line.find(' ',line.find(' ',13)+1)):len(line)-1])])
+    refMat=[]
+    for i in range(len(refList)/3):
+        refMat.append([refList.pop(0),refList.pop(0),refList.pop(0)])
+    
+    if ('x' in mAxis)==True:
+        with open('object.stl','a') as file:
+            file.write('\nsolid Default')
+            for subls in refMat:
+                file.write('\n  facet normal 0.000000e+00 0.000000e+00 -1.000000e+00 \n    outer loop \n')
+                for points in subls:
+                    file.write('      vertex '+str(-points[0])+' '+str(points[1])+' '+str(points[2]))
+                    file.write('\n')
+                file.write('    endloop\n  endfacet')
+            file.write('\nendsolid Default') 
+    if ('y' in mAxis)==True:
+        with open('object.stl','a') as file:
+            file.write('\nsolid Default')
+            for subls in refMat:
+                file.write('\n  facet normal 0.000000e+00 0.000000e+00 -1.000000e+00 \n    outer loop \n')
+                for points in subls:
+                    file.write('      vertex '+str(points[0])+' '+str(-points[1])+' '+str(points[2]))
+                    file.write('\n')
+                file.write('    endloop\n  endfacet')
+            file.write('\nendsolid Default')
+    if ('z' in mAxis)==True:
+        with open('object.stl','a') as file:
+            file.write('\nsolid Default')
+            for subls in refMat:
+                file.write('\n  facet normal 0.000000e+00 0.000000e+00 -1.000000e+00 \n    outer loop \n')
+                for points in subls:
+                    file.write('      vertex '+str(points[0])+' '+str(points[1])+' '+str(-points[2]))
+                    file.write('\n')
+                file.write('    endloop\n  endfacet')
+            file.write('\nendsolid Default')
+
+if shape=='cone':
     mkCone(sides)
+if mirror=='y':
+    reflect(mAxis)
