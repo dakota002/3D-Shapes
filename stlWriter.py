@@ -1,7 +1,9 @@
 #python file to write .stl files
-import random as rng
+from random import randint as rInt
+from random import random as rDec
+from math import cos,sin,acos,pi,sqrt
 
-#gets number of sides. Will round down
+#gets number of sides and shape
 while True:
     try:
         sides=int(input("How many sides: "))
@@ -9,15 +11,39 @@ while True:
     except (ValueError, NameError):
         print("Enter a valid integer")
 
-#Reference point
+while True:
+    try:
+        shape=str(input("Shape: "))
+        break
+    except (ValueError,NameError,SyntaxError):
+        print("Enter a valid shape")
+    
+while True:
+    try:
+        mirror=str(input("Mirror object: "))
+        break
+    except(ValueError,NameError,SyntaxError):
+        print("Choose valid option")
+
+if mirror.lower()=='y':
+    while True:
+        try:
+            mAxis=str(input("Enter tuple containing 'x', 'y', or 'z': "))
+            break
+        except(ValueError,NameError,SyntaxError):
+            print("Choose valid axis")
+            
+#Reference points
 origin = [0,0,0]
+a=(1/sqrt(3))
+unit = [a,a,a]
 
 #function to make random vectors
 def mkVect():
     global vect
     vect=[]
     for n in range(3):
-        point=rng.randint(0,9)
+        point=rDec()
         vect.append(point)
     return vect
 
@@ -58,26 +84,112 @@ def makeSide(sides):
         file.write('\nendsolid Default')
 
 
-#makes a triangular pyramid if sides = 4 and writes to stl file
-def triPyr():
-    temp=[]
-    for i in range(3):
-        temp.append(mkVect())
-    pyrMat=[[origin,temp[0],temp[1]],
-            [origin,temp[0],temp[2]],
-            [origin,temp[1],temp[2]],
-            temp]
+#define Dot product of vectors
+def Dot(vec1,vec2):
+    return vec1[0]*vec2[0]+vec1[1]*vec2[1]+vec1[2]*vec2[2]
+
+#define the length or norm of a vector
+def Norm(vect):
+    return sqrt(vect[0]**2+vect[1]**2+vect[2]**2)
+
+#determines initial theta
+def getTheta(vector_1,vector_2):
+    theta = acos((Dot(vector_1,vector_2)/(Norm(vector_1)*Norm(vector_2))))
+    return theta
+
+#determines a rotation phi
+def getPhi(sides):
+    phi=(2*pi)/sides
+    return phi
+
+#rotation function
+def rotation(phi,u,vect):
+    u_x=u[0]
+    u_y=u[1]
+    u_z=u[2]
+    R=[[cos(phi)+(u_x**2)*(1-cos(phi)),u_x*u_y*(1-cos(phi))-u_z*sin(phi),u_x*u_z*(1-cos(phi))+u_y*sin(phi)],
+       [u_x*u_y*(1-cos(phi))+u_z*sin(phi),cos(phi)+(u_y**2)*(1-cos(phi)),u_y*u_z*(1-cos(phi))-u_x*sin(phi)],
+       [u_x*u_z*(1-cos(phi))-u_y*sin(phi),u_y*u_z*(1-cos(phi))+u_x*sin(phi),cos(phi)+(u_z**2)*(1-cos(phi))]]
+    new =[]
+    for row in R:
+        new.append(row[0]*vect[0]+row[1]*vect[1]+row[2]*vect[2])
+    return new
+
+
+#makes a closed cone and writes to stl file
+def mkCone(sides):
+    m=mkVect()
+    vecMat=[origin,m]
+    for i in range(sides-1):
+        m=rotation(getPhi(sides),unit,m)
+        vecMat.append(m)
+    pyrMat=[]
+    for i in range(2,sides+1):
+        pyrMat.append([vecMat[0],vecMat[i-1],vecMat[i]])
+    pyrMat.append([vecMat[0],vecMat[len(vecMat)-1],vecMat[1]])
     with open('object.stl', 'w') as file:
         file.write('\nsolid Default')
         for i in range(sides):
             file.write('\n  facet normal 0.000000e+00 0.000000e+00 -1.000000e+00 \n    outer loop \n')
-            for j in range(3):
+            for j in range(len(pyrMat[i])):
                 file.write('      vertex '+str(pyrMat[i][j][0])+' '+str(pyrMat[i][j][1])+' '+str(pyrMat[i][j][2]))
                 file.write('\n')
             file.write('    endloop\n  endfacet')
+        for i in range(len(pyrMat)-2):
+            file.write('\n  facet normal 0.000000e+00 0.000000e+00 -1.000000e+00 \n    outer loop \n')
+            file.write('      vertex '+str(vecMat[1][0])+' '+str(vecMat[1][1])+' '+str(vecMat[1][2]))
+            file.write('\n')
+            for j in range(1,3):
+                file.write('      vertex '+str(vecMat[i+j+1][0])+' '+str(vecMat[i+j+1][1])+' '+str(vecMat[i+j+1][2]))
+                file.write('\n')
+            file.write('    endloop\n  endfacet')
         file.write('\nendsolid Default')
-if sides==4:
-    triPyr()
 
-else:
-    makeSide(sides)
+#reflects the shape about a plane
+def reflect(mAxis):
+    refList=[]
+    with open('object.stl','r') as file:
+        for line in file:
+            if ('vertex' in line)== True:
+                refList.append([float(line[13:line.find(' ',13)]),
+                               float(line[line.find(' ',13)+1:line.find(' ',line.find(' ',line.find(' ',13)+1))]),
+                               float(line[line.find(' ',line.find(' ',line.find(' ',13)+1)):len(line)-1])])
+    refMat=[]
+    for i in range(len(refList)/3):
+        refMat.append([refList.pop(0),refList.pop(0),refList.pop(0)])
+    
+    if ('x' in mAxis)==True:
+        with open('object.stl','a') as file:
+            file.write('\nsolid Default')
+            for subls in refMat:
+                file.write('\n  facet normal 0.000000e+00 0.000000e+00 -1.000000e+00 \n    outer loop \n')
+                for points in subls:
+                    file.write('      vertex '+str(-points[0])+' '+str(points[1])+' '+str(points[2]))
+                    file.write('\n')
+                file.write('    endloop\n  endfacet')
+            file.write('\nendsolid Default') 
+    if ('y' in mAxis)==True:
+        with open('object.stl','a') as file:
+            file.write('\nsolid Default')
+            for subls in refMat:
+                file.write('\n  facet normal 0.000000e+00 0.000000e+00 -1.000000e+00 \n    outer loop \n')
+                for points in subls:
+                    file.write('      vertex '+str(points[0])+' '+str(-points[1])+' '+str(points[2]))
+                    file.write('\n')
+                file.write('    endloop\n  endfacet')
+            file.write('\nendsolid Default')
+    if ('z' in mAxis)==True:
+        with open('object.stl','a') as file:
+            file.write('\nsolid Default')
+            for subls in refMat:
+                file.write('\n  facet normal 0.000000e+00 0.000000e+00 -1.000000e+00 \n    outer loop \n')
+                for points in subls:
+                    file.write('      vertex '+str(points[0])+' '+str(points[1])+' '+str(-points[2]))
+                    file.write('\n')
+                file.write('    endloop\n  endfacet')
+            file.write('\nendsolid Default')
+
+if shape=='cone':
+    mkCone(sides)
+if mirror=='y':
+    reflect(mAxis)
