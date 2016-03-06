@@ -3,36 +3,30 @@ from random import randint as rInt
 from random import random as rDec
 from math import cos,sin,acos,pi,sqrt
 
-#gets number of sides and shape
+#gets shape, reflection, etc
 while True:
     try:
-        sides=int(input("How many sides: "))
-        break
-    except (ValueError, NameError):
-        print("Enter a valid integer")
-
-while True:
-    try:
-        shape=str(input("Shape: "))
+        shape=str(input("Cone, Cube: "))
         break
     except (ValueError,NameError,SyntaxError):
         print("Enter a valid shape")
-    
-while True:
-    try:
-        mirror=str(input("Mirror object: "))
-        break
-    except(ValueError,NameError,SyntaxError):
-        print("Choose valid option")
 
-if mirror.lower()=='y':
+if shape.lower()=='cone':
     while True:
         try:
-            mAxis=str(input("Enter tuple containing 'x', 'y', or 'z': "))
+            mirror=str(input("Mirror object: "))
             break
         except(ValueError,NameError,SyntaxError):
-            print("Choose valid axis")
-            
+            print("Choose a valid option")
+
+    if mirror.lower()=='y':
+        while True:
+            try:
+                mAxis=str(input("x, y, or z"))
+                break
+            except(ValueError,NameError,SyntaxError):
+                print("Choose valid axis")
+
 #Reference points
 origin = [0,0,0]
 a=(1/sqrt(3))
@@ -43,12 +37,11 @@ def mkVect():
     global vect
     vect=[]
     for n in range(3):
-        point=rDec()
+        point=rDec()*10
         vect.append(point)
     return vect
 
 #creates a matrix of each set of 3 points which make a triangle
-
 def mkPmat():
     global pMat
     pMat=[origin]
@@ -58,7 +51,6 @@ def mkPmat():
     return pMat
 
 #creates a matrix of sides
-
 def mkSmat(sides):
     global sMat
     sMat=[]
@@ -84,7 +76,7 @@ def makeSide(sides):
         file.write('\nendsolid Default')
 
 
-#define Dot product of vectors
+#define Dot product of [x,y,z] vectors
 def Dot(vec1,vec2):
     return vec1[0]*vec2[0]+vec1[1]*vec2[1]+vec1[2]*vec2[2]
 
@@ -116,8 +108,14 @@ def rotation(phi,u,vect):
     return new
 
 
-#makes a closed cone and writes to stl file
-def mkCone(sides):
+#makes a closed cone centered at the origin and writes to stl file
+def mkCone():
+    while True:
+        try:
+            sides=int(input("How many sides: "))
+            break
+        except (ValueError, NameError):
+            print("Enter a valid integer")
     m=mkVect()
     vecMat=[origin,m]
     for i in range(sides-1):
@@ -127,7 +125,17 @@ def mkCone(sides):
     for i in range(2,sides+1):
         pyrMat.append([vecMat[0],vecMat[i-1],vecMat[i]])
     pyrMat.append([vecMat[0],vecMat[len(vecMat)-1],vecMat[1]])
-    with open('object.stl', 'w') as file:
+    while True:
+        try:
+            update=str(input("Update or overwrite: "))
+            break
+        except (NameError,SyntaxError):
+            print("Try again: ")
+    if (update.lower() in ('u','update'))==True:
+        fType='a+'
+    elif (update.lower() in ('o','overwrite'))==True:
+        fType='w+'
+    with open('object.stl', fType) as file:
         file.write('\nsolid Default')
         for i in range(sides):
             file.write('\n  facet normal 0.000000e+00 0.000000e+00 -1.000000e+00 \n    outer loop \n')
@@ -145,7 +153,9 @@ def mkCone(sides):
             file.write('    endloop\n  endfacet')
         file.write('\nendsolid Default')
 
-#reflects the shape about a plane
+
+
+#reflects the shape about an axis
 def reflect(mAxis):
     refList=[]
     with open('object.stl','r') as file:
@@ -167,7 +177,7 @@ def reflect(mAxis):
                     file.write('      vertex '+str(-points[0])+' '+str(points[1])+' '+str(points[2]))
                     file.write('\n')
                 file.write('    endloop\n  endfacet')
-            file.write('\nendsolid Default') 
+            file.write('\nendsolid Default')
     if ('y' in mAxis)==True:
         with open('object.stl','a') as file:
             file.write('\nsolid Default')
@@ -188,8 +198,94 @@ def reflect(mAxis):
                     file.write('\n')
                 file.write('    endloop\n  endfacet')
             file.write('\nendsolid Default')
+    if (('x' in mAxis) and ('y' in mAxis))==True:
+        with open('object.stl','a') as file:
+            file.write('\nsolid Default')
+            for subls in refMat:
+                file.write('\n  facet normal 0.000000e+00 0.000000e+00 -1.000000e+00 \n    outer loop \n')
+                for points in subls:
+                    file.write('      vertex '+str(-points[0])+' '+str(-points[1])+' '+str(points[2]))
+                    file.write('\n')
+                file.write('    endloop\n  endfacet')
+            file.write('\nendsolid Default')
+    if (('x' in mAxis) and ('z' in mAxis))==True:
+        with open('object.stl','a') as file:
+            file.write('\nsolid Default')
+            for subls in refMat:
+                file.write('\n  facet normal 0.000000e+00 0.000000e+00 -1.000000e+00 \n    outer loop \n')
+                for points in subls:
+                    file.write('      vertex '+str(-points[0])+' '+str(points[1])+' '+str(-points[2]))
+                    file.write('\n')
+                file.write('    endloop\n  endfacet')
+            file.write('\nendsolid Default')
+    if (('y' in mAxis) and ('z' in mAxis))==True:
+        with open('object.stl','a') as file:
+            file.write('\nsolid Default')
+            for subls in refMat:
+                file.write('\n  facet normal 0.000000e+00 0.000000e+00 -1.000000e+00 \n    outer loop \n')
+                for points in subls:
+                    file.write('      vertex '+str(points[0])+' '+str(-points[1])+' '+str(-points[2]))
+                    file.write('\n')
+                file.write('    endloop\n  endfacet')
+            file.write('\nendsolid Default')
+    if (('x' in mAxis) and ('y' in mAxis) and ('z' in mAxis))==True:
+        with open('object.stl','a') as file:
+            file.write('\nsolid Default')
+            for subls in refMat:
+                file.write('\n  facet normal 0.000000e+00 0.000000e+00 -1.000000e+00 \n    outer loop \n')
+                for points in subls:
+                    file.write('      vertex '+str(-points[0])+' '+str(-points[1])+' '+str(-points[2]))
+                    file.write('\n')
+                file.write('    endloop\n  endfacet')
+            file.write('\nendsolid Default')
 
-if shape=='cone':
-    mkCone(sides)
-if mirror=='y':
-    reflect(mAxis)
+#makes cubes centered at the origin
+def mkCube():
+    while True:
+        try:
+            size=int(input("Length of a side: "))
+            break
+        except (ValueError, NameError):
+            print("Enter a valid integer")
+    while True:
+        try:
+            update=str(input("Update or overwrite: "))
+            break
+        except (NameError,SyntaxError):
+            print("Try again: ")
+    if (update.lower() in ('u','update'))==True:
+        fType='a+'
+    elif (update.lower() in ('o','overwrite'))==True:
+        fType='w+'
+    E=float(size/2)
+    corners=[[E,E,E],
+             [-E,E,E],
+             [-E,-E,E],
+             [E,-E,E],
+             [E,-E,-E],
+             [E,E,-E],
+             [-E,E,-E],
+             [-E,-E,-E]]
+    eTryMat=[]
+    for i in range(5):
+        eTryMat.append([corners[0],corners[i+1],corners[i+2]])
+    eTryMat.append([corners[0],corners[6],corners[1]])
+    for i in range(5):
+        eTryMat.append([corners[7],corners[i+1],corners[i+2]])
+    eTryMat.append([corners[7],corners[6],corners[1]])
+    with open('object.stl',fType) as file:
+        file.write('\nsolid Default')
+        for i in range(12):
+            file.write('\n  facet normal 0.000000e+00 0.000000e+00 -1.000000e+00 \n    outer loop \n')
+            for j in range(len(eTryMat[i])):
+                file.write('      vertex '+str(eTryMat[i][j][0])+' '+str(eTryMat[i][j][1])+' '+str(eTryMat[i][j][2]))
+                file.write('\n')
+            file.write('    endloop\n  endfacet')
+        file.write('\nendsolid Default')
+
+if shape.lower()=='cone':
+    mkCone()
+    if mirror=='y':
+        reflect(mAxis)
+elif shape.lower()=='cube':
+    mkCube()
