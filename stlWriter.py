@@ -3,7 +3,10 @@ from random import randint as rInt
 from random import random as rDec
 from math import cos,sin,acos,pi,sqrt
 
+
 #gets shape, reflection, etc
+
+
 while True:
     try:
         shape=str(input("Cone, Cube: "))
@@ -27,6 +30,7 @@ if shape.lower()=='cone':
             except(ValueError,NameError,SyntaxError):
                 print("Choose valid axis")
 
+
 #Reference points
 origin = [0,0,0]
 a=(1/sqrt(3))
@@ -42,6 +46,7 @@ def mkVect():
     return vect
 
 #creates a matrix of each set of 3 points which make a triangle
+
 def mkPmat():
     global pMat
     pMat=[origin]
@@ -51,6 +56,7 @@ def mkPmat():
     return pMat
 
 #creates a matrix of sides
+
 def mkSmat(sides):
     global sMat
     sMat=[]
@@ -117,10 +123,12 @@ def mkCone():
         except (ValueError, NameError):
             print("Enter a valid integer")
     m=mkVect()
+    global vecMat
     vecMat=[origin,m]
     for i in range(sides-1):
         m=rotation(getPhi(sides),unit,m)
         vecMat.append(m)
+    global pyrMat
     pyrMat=[]
     for i in range(2,sides+1):
         pyrMat.append([vecMat[0],vecMat[i-1],vecMat[i]])
@@ -154,19 +162,17 @@ def mkCone():
         file.write('\nendsolid Default')
 
 
-
 #reflects the shape about an axis
 def reflect(mAxis):
-    refList=[]
-    with open('object.stl','r') as file:
-        for line in file:
-            if ('vertex' in line)== True:
-                refList.append([float(line[13:line.find(' ',13)]),
-                               float(line[line.find(' ',13)+1:line.find(' ',line.find(' ',line.find(' ',13)+1))]),
-                               float(line[line.find(' ',line.find(' ',line.find(' ',13)+1)):len(line)-1])])
-    refMat=[]
-    for i in range(len(refList)/3):
-        refMat.append([refList.pop(0),refList.pop(0),refList.pop(0)])
+    temp=[]
+    for i in range(len(pyrMat)-2):
+        subTem=[]
+        subTem.append(vecMat[1])
+        for j in range(1,3):
+            subTem.append(vecMat[i+j+1])
+        temp.append(subTem)
+
+    refMat=pyrMat+temp
     
     if ('x' in mAxis)==True:
         with open('object.stl','a') as file:
