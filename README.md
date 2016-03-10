@@ -25,3 +25,7 @@ Added cubes centered at origin.
 Made some subtle changes to how and when input variables are retrieved.
 Added option to update or overwrite existing file (this leads to a little issue with the reflection if cones are added and reflected to a file that already contains anything).
 
+--3/9/16--
+Updated reflection again to fix issue when adding new cones.
+Simplified the reflection process a bit.
+
